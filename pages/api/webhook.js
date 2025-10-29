@@ -1,36 +1,26 @@
 // pages/api/webhook.js
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Only POST allowed' });
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Use GET" });
   }
 
-  const { webhookUrl, content, username, avatar_url } = req.body;
+  const { url, content, username } = req.query;
 
-  if (!webhookUrl || !content) {
-    return res.status(400).json({ error: 'Missing webhookUrl or content' });
+  if (!url || !content) {
+    return res.status(400).json({ error: "Missing url or content" });
   }
 
   try {
-    const discordResponse = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    await fetch(decodeURIComponent(url), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        content,
-        username: username || 'Delta Proxy',
-        avatar_url: avatar_url || '',
+        content: decodeURIComponent(content),
+        username: username ? decodeURIComponent(username) : "Delta Bot",
       }),
     });
-
-    if (!discordResponse.ok) {
-      const errorText = await discordResponse.text();
-      throw new Error(`Discord error: ${discordResponse.status} - ${errorText}`);
-    }
-
-    res.status(200).json({ success: true, message: 'Sent to Discord!' });
-  } catch (error) {
-    console.error('Proxy error:', error.message);
-    res.status(500).json({ error: error.message });
+    res.status(200).send("OK");
+  } catch (e) {
+    res.status(500).send("Error");
   }
 }
